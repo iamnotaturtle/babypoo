@@ -1,4 +1,4 @@
-# babypoo
+# babypoo <img src="favicon-32x32.png"/>
 Track baby feeding, peeing and poop times.
 
 ## Description
