@@ -9,10 +9,12 @@ Privacy and usability is a must. Nothing is shared or tracked. Code is open sour
 ## BabyPoo
 Android version of the app. Built using Jetpack Compose and Room.
 
+## BabyPooiOS
+iOS version of the app. Built using SwiftUI.
+
 ## Features
 * [x] Keep track of baby times
 * [ ] Share with your partner
     * [ ] Export as a csv
     * [ ] Shared activity feeds
 * [ ] Set reminders and notifications
-* [ ] iOS version
