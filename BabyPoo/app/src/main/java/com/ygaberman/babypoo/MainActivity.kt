@@ -11,6 +11,9 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ArrowForward
+import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
@@ -53,7 +56,20 @@ class MainActivity : ComponentActivity() {
                     scaffoldState = scaffoldState,
                     topBar = {
                         TopAppBar(title = {
-                            Text(stringResource(R.string.app_name))
+                            Row (modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                Text(stringResource(R.string.app_name))
+                                IconButton(
+                                    onClick = {
+                                        // Get activities
+                                        // add as rows to csv
+                                        // write to file and export
+                                    }) {
+                                    Icon(Icons.Filled.Email, contentDescription = "export to csv")
+                                }
+                            }
                         })
                     },
                     floatingActionButton = {
