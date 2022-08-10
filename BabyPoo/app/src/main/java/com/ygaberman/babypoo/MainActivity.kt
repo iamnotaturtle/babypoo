@@ -48,7 +48,7 @@ class MainActivity : ComponentActivity() {
             val scope = rememberCoroutineScope()
             val scaffoldState = rememberScaffoldState()
 
-            BabyPooTheme {
+            BabyPooTheme() {
                 Scaffold(
                     scaffoldState = scaffoldState,
                     topBar = {
