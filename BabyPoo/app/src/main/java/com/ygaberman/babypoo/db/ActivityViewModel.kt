@@ -9,6 +9,10 @@ class ActivityViewModel(private val repository: ActivityRepository) : ViewModel(
     fun insert(activity: Activity) = viewModelScope.launch {
         repository.insert(activity)
     }
+
+    fun delete(activity: Activity) = viewModelScope.launch {
+        repository.delete(activity)
+    }
 }
 
 class ActivityViewModelFactory(private val repository: ActivityRepository) :

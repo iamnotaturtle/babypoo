@@ -5,15 +5,19 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.runtime.*
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
@@ -23,6 +27,8 @@ import com.ygaberman.babypoo.db.Activity
 import com.ygaberman.babypoo.db.ActivityViewModel
 import com.ygaberman.babypoo.db.ActivityViewModelFactory
 import com.ygaberman.babypoo.ui.theme.BabyPooTheme
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
@@ -32,25 +38,24 @@ class MainActivity : ComponentActivity() {
     private val activityViewModel: ActivityViewModel by viewModels {
         ActivityViewModelFactory((application as ActivityApplication).repository)
     }
-    private var babyActivities: List<Activity> = mutableListOf()
 
     @SuppressLint("UnusedMaterialScaffoldPaddingParameter")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        activityViewModel.allActivities.observe(this) { activities ->
-            activities.let { babyActivities = it }
-        }
-
         setContent {
             val navController = rememberNavController()
+            val scope = rememberCoroutineScope()
+            val scaffoldState = rememberScaffoldState()
 
             BabyPooTheme {
-                Scaffold(topBar = {
-                    TopAppBar(title = {
-                        Text(stringResource(R.string.app_name))
-                    })
-                },
+                Scaffold(
+                    scaffoldState = scaffoldState,
+                    topBar = {
+                        TopAppBar(title = {
+                            Text(stringResource(R.string.app_name))
+                        })
+                    },
                     floatingActionButton = {
                         FloatingActionButton(
                             onClick = {
@@ -61,14 +66,21 @@ class MainActivity : ComponentActivity() {
                         ) {
                             Icon(Icons.Filled.Add, contentDescription = "Add an activity")
                         }
-                    }
+                    },
                 ) {
                     NavHost(
                         navController = navController,
                         startDestination = "activity-list"
                     ) {
-                        composable("activity-list") { ActivityList(babyActivities) }
-                        composable("activity-create") { CreateActivity(navController, activityViewModel) }
+                        composable("activity-list") { ActivityList(activityViewModel) }
+                        composable("activity-create") {
+                            CreateActivity(
+                                scope,
+                                scaffoldState,
+                                navController,
+                                activityViewModel
+                            )
+                        }
                     }
                 }
             }
@@ -77,16 +89,9 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun ActivityList(activities: List<Activity>) {
-    if (activities.isEmpty()) {
-        return Row(
-            modifier = Modifier.fillMaxSize(),
-            horizontalArrangement = Arrangement.Center,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Text("No activities recorded yet")
-        }
-    }
+fun ActivityList(activityViewModel: ActivityViewModel) {
+    val activities: List<Activity> by activityViewModel.allActivities.observeAsState(listOf())
+
     Column {
         Row(
             modifier = Modifier
@@ -94,12 +99,23 @@ fun ActivityList(activities: List<Activity>) {
                 .padding(16.dp),
             horizontalArrangement = Arrangement.Center,
         ) {
-            Text("Activity Feed")
+            Text("Timeline")
         }
-        LazyColumn {
-            for (activity in activities) {
-                item {
-                    ActivityRow(activity = activity)
+
+        if (activities.isEmpty()) {
+            Row(
+                modifier = Modifier.fillMaxSize(),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text("No activities recorded yet")
+            }
+        } else {
+            LazyColumn {
+                for (activity in activities) {
+                    item {
+                        ActivityRow(activity, activityViewModel)
+                    }
                 }
             }
         }
@@ -107,30 +123,63 @@ fun ActivityList(activities: List<Activity>) {
 }
 
 @Composable
-fun ActivityRow(activity: Activity) {
+fun ActivityRow(activity: Activity, activityViewModel: ActivityViewModel) {
     Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.Start
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(10.dp)
+            .pointerInput(Unit) {
+                detectTapGestures(onLongPress = { activityViewModel.delete(activity) })
+            },
+        horizontalArrangement = Arrangement.Start,
+        verticalAlignment = Alignment.Top
     ) {
-        Column(modifier = Modifier.padding(start = 8.dp, end = 8.dp)) {
-            Text(text = formatter.format(activity.createdAt.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime()))
-        }
-        Column {
-            Row {
-                Text(text = activity.type)
-            }
-            Row {
-                Text(text = activity.notes)
+        Text(
+            text = formatter.format(
+                activity.createdAt.toInstant().atZone(ZoneId.systemDefault())
+                    .toLocalDateTime()
+            )
+        )
+        Spacer(modifier = Modifier.padding(10.dp))
+        Card(
+            elevation = 10.dp,
+
+            ) {
+            Column(
+                modifier = Modifier
+                    .padding(5.dp)
+                    .fillMaxWidth(),
+            ) {
+                Row(Modifier.padding(bottom = 10.dp)) {
+                    Text("Type: ", fontWeight = FontWeight.Bold)
+                    Text(text = activity.type)
+                }
+                Row {
+                    Text("Notes: ", fontWeight = FontWeight.Bold)
+                    Text(text = activity.notes)
+                }
             }
         }
     }
 }
 
+enum class ActivityType(val type: String) {
+    Feed("Feed 🍼"),
+    Pee("Pee 💦"),
+    Poop("Poop 💩"),
+}
+
 @Composable
-fun CreateActivity(navController: NavController, activityViewModel: ActivityViewModel) {
-    var typeModified by remember { mutableStateOf(false) }
-    var type by remember { mutableStateOf("") }
+fun CreateActivity(
+    scope: CoroutineScope,
+    scaffoldState: ScaffoldState,
+    navController: NavController,
+    activityViewModel: ActivityViewModel
+) {
+    val initialType = "Type"
+    var type by remember { mutableStateOf(initialType) }
     var notes by remember { mutableStateOf("") }
+    val expanded = remember { mutableStateOf(false) }
 
     Column(
         modifier = Modifier.fillMaxSize(),
@@ -142,28 +191,55 @@ fun CreateActivity(navController: NavController, activityViewModel: ActivityView
         ) {
             Text(text = "Record an activity", modifier = Modifier.padding(16.dp))
         }
-        OutlinedTextField(
-            value = type,
-            onValueChange = {
-                typeModified = true
-                type = it
-            },
-            label = { Text("Type") },
-            placeholder = { Text("ex: pee, poop, feed") },
-            singleLine = true,
-            isError = type.none { !it.isWhitespace() } && typeModified,
-        )
-        OutlinedTextField(
-            value = notes,
-            onValueChange = { notes = it },
-            label = { Text("Notes") },
-            placeholder = { Text("ex: fed 50ml of formula") },
-        )
+        Column(modifier = Modifier.padding(start = 16.dp)) {
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Start) {
+                Button(
+                    onClick = {
+                        expanded.value = true
+                    }) {
+                    Text(type)
+                    DropdownMenu(
+                        expanded = expanded.value,
+                        onDismissRequest = { expanded.value = false }) {
+                        DropdownMenuItem(onClick = {
+                            type = ActivityType.Feed.type
+                            expanded.value = false
+                        }) {
+                            Text(ActivityType.Feed.type)
+                        }
+                        DropdownMenuItem(onClick = {
+                            type = ActivityType.Pee.type
+                            expanded.value = false
+                        }) {
+                            Text(ActivityType.Pee.type)
+                        }
+                        DropdownMenuItem(onClick = {
+                            type = ActivityType.Poop.type
+                            expanded.value = false
+                        }) {
+                            Text(ActivityType.Poop.type)
+                        }
+                    }
+                }
+            }
+            OutlinedTextField(
+                value = notes,
+                onValueChange = { notes = it },
+                label = { Text("Notes") },
+                placeholder = { Text("ex: fed 50ml of formula") },
+            )
+        }
         Button(
             onClick = {
-                activityViewModel.insert(Activity(type = type, notes = notes))
-                navController.navigate("activity-list") {
-                    popUpTo("activity-list") { inclusive = true }
+                if (type == initialType) {
+                    scope.launch {
+                        scaffoldState.snackbarHostState.showSnackbar("Please select an activity type")
+                    }
+                } else {
+                    activityViewModel.insert(Activity(type = type, notes = notes))
+                    navController.navigate("activity-list") {
+                        popUpTo("activity-list") { inclusive = true }
+                    }
                 }
             },
             modifier = Modifier.padding(16.dp)

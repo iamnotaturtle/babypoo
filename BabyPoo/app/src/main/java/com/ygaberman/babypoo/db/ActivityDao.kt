@@ -14,6 +14,9 @@ interface ActivityDao {
     @Query("DELETE FROM activity")
     suspend fun deleteAll()
 
+    @Query("DELETE FROM activity where id = :id")
+    suspend fun deleteActivity(id: String)
+
     @Query("SELECT * FROM activity")
     fun loadActivities(): Flow<List<Activity>>
 }

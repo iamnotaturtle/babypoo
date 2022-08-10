@@ -1,11 +1,13 @@
 package com.ygaberman.babypoo.db
 
 import android.content.Context
-import androidx.room.*
+import androidx.room.Database
+import androidx.room.Room
+import androidx.room.RoomDatabase
+import androidx.room.TypeConverters
 import androidx.sqlite.db.SupportSQLiteDatabase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import java.util.*
 
 @Database(entities = [Activity::class], version = 1)
 @TypeConverters(Converters::class)
@@ -32,9 +34,6 @@ abstract class AppDatabase : RoomDatabase() {
     }
 
     private class DbCallback(private val scope: CoroutineScope) : RoomDatabase.Callback() {
-        override fun onCreate(db: SupportSQLiteDatabase) {
-            super.onCreate(db)
-        }
     }
 
     companion object {

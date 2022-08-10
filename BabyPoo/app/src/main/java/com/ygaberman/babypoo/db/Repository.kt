@@ -10,4 +10,9 @@ class ActivityRepository(private val activityDao: ActivityDao) {
     suspend fun insert(activity: Activity) {
         activityDao.insertActivities(activity)
     }
+
+    @WorkerThread
+    suspend fun delete(activity: Activity) {
+        activityDao.deleteActivity(activity.id)
+    }
 }
