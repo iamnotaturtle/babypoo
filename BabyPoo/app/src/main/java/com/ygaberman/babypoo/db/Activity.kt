@@ -10,7 +10,7 @@ data class Activity(
     val type: String,
     val notes: String,
 ) {
-    @PrimaryKey()
+    @PrimaryKey
     var id: String = UUID.randomUUID().toString()
 
     @ColumnInfo(name = "created_at")

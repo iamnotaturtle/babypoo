@@ -52,34 +52,46 @@ class MainActivity : ComponentActivity() {
             val scope = rememberCoroutineScope()
             val scaffoldState = rememberScaffoldState()
 
-            BabyPooTheme() {
+            BabyPooTheme {
                 Scaffold(
                     scaffoldState = scaffoldState,
                     topBar = {
                         TopAppBar(title = {
-                            Row (modifier = Modifier.fillMaxWidth(),
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically,
+                                verticalAlignment = Alignment.CenterVertically,
                             ) {
                                 Text(stringResource(R.string.app_name))
                                 IconButton(
                                     onClick = {
                                         scope.launch {
                                             val activities = activityViewModel.allActivities.value
-                                            if (activities != null ){
-                                                val fileOut = exportToCSV("baby.csv", getExternalFilesDir(null), "Time,Type,Notes\n", activities)
-                                                val uri = FileProvider.getUriForFile(applicationContext, "${packageName}.file_provider", fileOut)
-                                                grantUriPermission(packageName,uri,Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                                            if (activities != null) {
+                                                val fileOut = exportToCSV(
+                                                    "baby.csv",
+                                                    getExternalFilesDir(null),
+                                                    "Time,Type,Notes\n",
+                                                    activities
+                                                )
+                                                val uri = FileProvider.getUriForFile(
+                                                    applicationContext,
+                                                    "${packageName}.file_provider",
+                                                    fileOut
+                                                )
+                                                grantUriPermission(
+                                                    packageName,
+                                                    uri,
+                                                    Intent.FLAG_GRANT_READ_URI_PERMISSION
+                                                )
                                                 val sendIntent = Intent(Intent.ACTION_SEND)
                                                 sendIntent.putExtra(Intent.EXTRA_STREAM, uri)
-                                                sendIntent.flags = Intent.FLAG_GRANT_READ_URI_PERMISSION
+                                                sendIntent.flags =
+                                                    Intent.FLAG_GRANT_READ_URI_PERMISSION
                                                 sendIntent.type = "text/csv"
                                                 startActivity(sendIntent)
                                             }
                                         }
-                                        // Get activities
-                                        // add as rows to csv
-                                        // write to file and export
                                     }) {
                                     Icon(Icons.Filled.Email, contentDescription = "export to csv")
                                 }

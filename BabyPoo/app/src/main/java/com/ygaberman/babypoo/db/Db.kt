@@ -33,9 +33,6 @@ abstract class AppDatabase : RoomDatabase() {
         }
     }
 
-    private class DbCallback(private val scope: CoroutineScope) : RoomDatabase.Callback() {
-    }
-
     companion object {
         // DB Singleton
 
