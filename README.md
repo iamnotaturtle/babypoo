@@ -14,7 +14,6 @@ iOS version of the app. Built using SwiftUI.
 
 ## Features
 * [x] Keep track of baby times
-* [ ] Share with your partner
-    * [ ] Export as a csv
-    * [ ] Shared activity feeds
+* [x] Export as a csv
+* [ ] Share activity feeds with your partner
 * [ ] Set reminders and notifications

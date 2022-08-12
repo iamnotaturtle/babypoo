@@ -1,6 +1,7 @@
 package com.ygaberman.babypoo
 
 import android.annotation.SuppressLint
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -11,9 +12,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.Email
-import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
@@ -22,6 +21,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.core.content.FileProvider
 import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -29,6 +29,7 @@ import androidx.navigation.compose.rememberNavController
 import com.ygaberman.babypoo.db.Activity
 import com.ygaberman.babypoo.db.ActivityViewModel
 import com.ygaberman.babypoo.db.ActivityViewModelFactory
+import com.ygaberman.babypoo.io.exportToCSV
 import com.ygaberman.babypoo.ui.theme.BabyPooTheme
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -63,6 +64,19 @@ class MainActivity : ComponentActivity() {
                                 Text(stringResource(R.string.app_name))
                                 IconButton(
                                     onClick = {
+                                        scope.launch {
+                                            val activities = activityViewModel.allActivities.value
+                                            if (activities != null ){
+                                                val fileOut = exportToCSV("baby.csv", getExternalFilesDir(null), "Time,Type,Notes\n", activities)
+                                                val uri = FileProvider.getUriForFile(applicationContext, "${packageName}.file_provider", fileOut)
+                                                grantUriPermission(packageName,uri,Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                                                val sendIntent = Intent(Intent.ACTION_SEND)
+                                                sendIntent.putExtra(Intent.EXTRA_STREAM, uri)
+                                                sendIntent.flags = Intent.FLAG_GRANT_READ_URI_PERMISSION
+                                                sendIntent.type = "text/csv"
+                                                startActivity(sendIntent)
+                                            }
+                                        }
                                         // Get activities
                                         // add as rows to csv
                                         // write to file and export
