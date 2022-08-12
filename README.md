@@ -6,7 +6,7 @@ Curious when your last feeding time was? This app will help keep track of your b
 
 Privacy and usability is a must. Nothing is shared or tracked. Code is open source.
 
-## BabyPoo
+## BabyPoo <img src="https://build.appcenter.ms/v0.1/apps/96f87ff0-ee41-4690-a5d4-d5dc4d691ed6/branches/master/badge" />
 Android version of the app. Built using Jetpack Compose and Room.
 
 ## BabyPooiOS
